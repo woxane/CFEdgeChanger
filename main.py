@@ -8,10 +8,11 @@ from json import loads
 import CONFIG
 import subprocess
 
-def CreateConfig() : 
-    # Create cloudflare config file . 
-    if path.exists('CONFIG.py') : 
-        return 
+def CreateConfig(force = False) : 
+    # Create cloudflare config file .
+    if not force : 
+        if path.exists('CONFIG.py') : 
+            return 
        
     Zone = input('Enter your domain(zone) in CloudFlare : ') 
     DnsRecord = input('Enter your subdomain in CloudFlare : ')
@@ -124,12 +125,17 @@ def HelpPage() :
     print('''Usage : 
                     python main.py [Thread] [YourNetworkIsp] [AddrOfIpRange] 
             Example : 
-                    python main.py 30 Mci ip.txt''') 
+                    python main.py 30 Mci ip.txt
+          python main.py config  // for edit your config file
+          ''') 
 
 
 if __name__ == '__main__' :
     if len(argv) <= 1 :
         HelpPage()
+    elif len(argv) == 2 : 
+        if argv[1] == 'config' : 
+            CreateConfig(force = True)
     else :
         CreateConfig()
         ScanIp()
