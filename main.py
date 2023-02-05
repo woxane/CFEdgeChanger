@@ -116,9 +116,16 @@ def RecordUpdate() :
         print('Error !!!')
         print(Req.text)
 
-
+def HelpPage() :
+    print('''Usage : 
+                    python main.py [Thread] [YourNetworkIsp] [AddrOfIpRange] 
+            Example : 
+                    python main.py 30 Mci ip.txt''') 
 
 
 if __name__ == '__main__' :
-    CreateConfig()
-    ScanIp()
+    if len(argv) <= 1 :
+        HelpPage()
+    else :
+        CreateConfig()
+        ScanIp()
