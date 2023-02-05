@@ -6,7 +6,7 @@ from sys import argv
 import requests
 from json import loads
 import CONFIG
-
+import subprocess
 
 def CreateConfig() : 
     # Create cloudflare config file . 
@@ -40,7 +40,7 @@ def ScannIp() :
     with open(Output , 'r') as File :
         Ping , Ip = File.readlines()[1].split()
     
-    print(f'The best ip for this network is : \nPing : {Ping} , Ip : {Ip}')    
+    print(f'The best ip for this network is : \nIp : {Ip} , Ping : {Ping}')    
 
 
 def DnsRecordGet() :
@@ -63,11 +63,22 @@ def DnsRecordGet() :
 
     ARecords = [[Data['content'] , Data['id']] for Data in Data['result']]  # get data in this format [ip , CloudFlare Dns Id]
     
+    return ARecords
 
-    
+def GetPing() : # This Part of code came from this repo https://github.com/MortezaBashsiz/CFScanner    
+    ARecords = DnsRecordGet()
+
+    for Data in ARecords :  #Data[0] is ip
+        Command = "timeout 2 curl -s -w 'TIME: %{time_total}\n' --tlsv1.2 -servername scan.sudoer.net -H 'Host: scan.sudoer.net'" + f" --resolve scan.sudoer.net:443:{Data[0]} https://scan.sudoer.net " + "| grep 'TIME' | tail -n 1 | awk '{print $2}' | xargs -I {} echo '{} * 1000 /1' | bc" 
+
+        Ps = subprocess.Popen(Command , shell = True , stdout = subprocess.PIPE , stderr = subprocess.STDOUT)
+        Ping = Ps.communicate()[0].decode().strip()
+        print(f'Ip : {Data[0]} , Ping : {Ping if Ping else "FAILED"}')
+
 
 
 if __name__ == '__main__' :
     CreateConfig()
     ScannIp()
     DnsRecordGet()
+    GetPing()
