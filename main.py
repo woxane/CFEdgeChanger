@@ -3,6 +3,9 @@
 
 from os import path , system , stat
 from sys import argv
+import requests
+from json import loads
+import CONFIG
 
 
 def CreateConfig() : 
@@ -17,10 +20,10 @@ def CreateConfig() :
 
     with open('CONFIG.py' , 'w') as File :    
         File.write('#Made With <3')
-        File.write(f'\nZone = {Zone}')
-        File.write(f'\nDnsRecord = {DnsRecord}')
-        File.write(f'\nEmail = {Email}')
-        File.write(f'\nAuthKey = {AuthKey}')
+        File.write(f'\nZone = "{Zone}"')
+        File.write(f'\nDnsRecord = "{DnsRecord}"')
+        File.write(f'\nEmail = "{Email}"')
+        File.write(f'\nAuthKey = "{AuthKey}"')
 
 
 def ScannIp() :
@@ -40,6 +43,31 @@ def ScannIp() :
     print(f'The best ip for this network is : \nPing : {Ping} , Ip : {Ip}')    
 
 
+def DnsRecordGet() :
+    Zone = CONFIG.Zone
+    Email = CONFIG.Email
+    AuthKey = CONFIG.AuthKey
+    DnsRecord = CONFIG.DnsRecord
+
+    Header = {'X-Auth-Email' : Email , 'X-Auth-Key' : AuthKey , 'Content-Type' : 'application/json'}
+    Url = f"https://api.cloudflare.com/client/v4/zones?name={Zone}&status=active"
+
+    Req = requests.get(Url , headers=Header)
+    Data = loads(Req.text)
+
+    ZoneId = Data['result'][0]['id']
+
+    Url = f'https://api.cloudflare.com/client/v4/zones/{ZoneId}/dns_records?type=A&name={DnsRecord}'
+    Req = requests.get(Url , headers = Header)
+    Data = loads(Req.text)
+
+    ARecords = [[Data['content'] , Data['id']] for Data in Data['result']]  # get data in this format [ip , CloudFlare Dns Id]
+    
+
+    
+
+
 if __name__ == '__main__' :
     CreateConfig()
     ScannIp()
+    DnsRecordGet()
