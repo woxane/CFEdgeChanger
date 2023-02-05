@@ -2,7 +2,7 @@
 
 
 from os import path , system , stat
-from sys import argv
+from sys import argv , exit
 import requests
 from json import loads
 import CONFIG
@@ -90,9 +90,13 @@ def GetPing() : # This Part of code came from this repo https://github.com/Morte
         print(f'{n}) Ip : {Data[0]} , Ping : {Ping if Ping else "FAILED"}')
         n += 1
 
-    IndexOfIp = int(input('Enter the index of ip you want to change : ')) - 1
+    IndexOfIp = int(input('Enter the index of ip you want to change (-1 for exit): ')) - 1
 
-    return ARecords[IndexOfIp]
+    if IndexOfIp == -2 : 
+        exit('Aborted ...')
+
+    else : 
+        return ARecords[IndexOfIp]
         
 
 def RecordUpdate() :
