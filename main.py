@@ -27,6 +27,8 @@ def CreateConfig() :
 
 
 def ScanIp() :
+    global Ip
+
     ScriptDir = path.abspath(path.dirname(argv[0]))
     Thread = argv[1]
     NetworkIsp = argv[2]
@@ -42,7 +44,7 @@ def ScanIp() :
     
     print(f'The best ip for this network is : \nIp : {Ip} , Ping : {Ping}')    
 
-    return Ip
+    RecordUpdate()
 
 def ZoneIdGet() : 
     Zone = CONFIG.Zone
@@ -97,26 +99,26 @@ def RecordUpdate() :
 
     ZoneId = ZoneIdGet()
     DnsRecordId = GetPing()[1] 
-    Ip = ScanIp() 
     Email = CONFIG.Email
     AuthKey = CONFIG.AuthKey
     DnsRecord = CONFIG.DnsRecord
 
     Header = {'X-Auth-Email' : Email , 'X-Auth-Key' : AuthKey , 'Content-Type' : 'application/json'}
-#    Data = {'type' : 'A' , 'name' : DnsRecord , 'content' : Ip , 'ttl' : 1 , 'proxied' : 'false'}
     Data = "{\"type\":\"A\",\"name\":"+f"\"{DnsRecord}\""+",\"content\":"+f"\"{Ip}\""+",\"ttl\":1,\"proxied\":false}"
     Url = f"https://api.cloudflare.com/client/v4/zones/{ZoneId}/dns_records/{DnsRecordId}"
 
     Req = requests.put(Url , headers = Header , data = Data)
-    print(Req)
-    print(Req.text)
+
+    if Req.status_code == 200 : 
+        print('Done <3 .')
+
+    else :
+        print('Error !!!')
+        print(Req.text)
 
 
 
 
 if __name__ == '__main__' :
-#    CreateConfig()
-#    ScannIp()
-#    DnsRecordGet()
-#    GetPing()
-    RecordUpdate()
+    CreateConfig()
+    ScanIp()
