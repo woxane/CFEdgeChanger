@@ -41,9 +41,8 @@ echo "Start testing for $2"
 
 cloudFlareIpList=$(cat $3)
 
-now=$(date +"%Y%m%d-%H%M%S")
 scriptDir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-resultFile="$scriptDir/$now-result-$2.cf"
+resultFile="$scriptDir/result-$2.cf"
 
 
 # Function fncCheckSubnet

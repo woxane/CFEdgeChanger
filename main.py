@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
 
-from os import path
-
+from os import path , system , stat
+from sys import argv
 
 
 def CreateConfig() : 
@@ -23,6 +23,23 @@ def CreateConfig() :
         File.write(f'\nAuthKey = {AuthKey}')
 
 
+def ScannIp() :
+    ScriptDir = path.abspath(path.dirname(argv[0]))
+    Thread = argv[1]
+    NetworkIsp = argv[2]
+    IpRanges = argv[3]
+    Output = f'result-{NetworkIsp}.cf'
+    system(f'{ScriptDir}/FindIp.sh {Thread} {NetworkIsp} {IpRanges}')     
+
+    if stat(Output).st_size == 1 : # means if file is empty 
+        return 
+
+    with open(Output , 'r') as File :
+        Ping , Ip = File.readlines()[1].split()
+    
+    print(f'The best ip for this network is : \nPing : {Ping} , Ip : {Ip}')    
+
 
 if __name__ == '__main__' :
     CreateConfig()
+    ScannIp()
