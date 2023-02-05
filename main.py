@@ -26,7 +26,7 @@ def CreateConfig() :
         File.write(f'\nAuthKey = "{AuthKey}"')
 
 
-def ScannIp() :
+def ScanIp() :
     ScriptDir = path.abspath(path.dirname(argv[0]))
     Thread = argv[1]
     NetworkIsp = argv[2]
@@ -42,8 +42,9 @@ def ScannIp() :
     
     print(f'The best ip for this network is : \nIp : {Ip} , Ping : {Ping}')    
 
+    return Ip
 
-def DnsRecordGet() :
+def ZoneIdGet() : 
     Zone = CONFIG.Zone
     Email = CONFIG.Email
     AuthKey = CONFIG.AuthKey
@@ -56,6 +57,17 @@ def DnsRecordGet() :
     Data = loads(Req.text)
 
     ZoneId = Data['result'][0]['id']
+    
+    return ZoneId
+
+def DnsRecordGet() :
+    Email = CONFIG.Email
+    AuthKey = CONFIG.AuthKey
+    DnsRecord = CONFIG.DnsRecord
+
+    Header = {'X-Auth-Email' : Email , 'X-Auth-Key' : AuthKey , 'Content-Type' : 'application/json'}
+
+    ZoneId = ZoneIdGet()
 
     Url = f'https://api.cloudflare.com/client/v4/zones/{ZoneId}/dns_records?type=A&name={DnsRecord}'
     Req = requests.get(Url , headers = Header)
@@ -67,18 +79,44 @@ def DnsRecordGet() :
 
 def GetPing() : # This Part of code came from this repo https://github.com/MortezaBashsiz/CFScanner    
     ARecords = DnsRecordGet()
-
+    n = 1
     for Data in ARecords :  #Data[0] is ip
         Command = "timeout 2 curl -s -w 'TIME: %{time_total}\n' --tlsv1.2 -servername scan.sudoer.net -H 'Host: scan.sudoer.net'" + f" --resolve scan.sudoer.net:443:{Data[0]} https://scan.sudoer.net " + "| grep 'TIME' | tail -n 1 | awk '{print $2}' | xargs -I {} echo '{} * 1000 /1' | bc" 
 
         Ps = subprocess.Popen(Command , shell = True , stdout = subprocess.PIPE , stderr = subprocess.STDOUT)
         Ping = Ps.communicate()[0].decode().strip()
-        print(f'Ip : {Data[0]} , Ping : {Ping if Ping else "FAILED"}')
+        print(f'{n}) Ip : {Data[0]} , Ping : {Ping if Ping else "FAILED"}')
+        n += 1
+
+    IndexOfIp = int(input('Enter the index of ip you want to change : ')) - 1
+
+    return ARecords[IndexOfIp]
+        
+
+def RecordUpdate() :
+
+    ZoneId = ZoneIdGet()
+    DnsRecordId = GetPing()[1] 
+    Ip = ScanIp() 
+    Email = CONFIG.Email
+    AuthKey = CONFIG.AuthKey
+    DnsRecord = CONFIG.DnsRecord
+
+    Header = {'X-Auth-Email' : Email , 'X-Auth-Key' : AuthKey , 'Content-Type' : 'application/json'}
+#    Data = {'type' : 'A' , 'name' : DnsRecord , 'content' : Ip , 'ttl' : 1 , 'proxied' : 'false'}
+    Data = "{\"type\":\"A\",\"name\":"+f"\"{DnsRecord}\""+",\"content\":"+f"\"{Ip}\""+",\"ttl\":1,\"proxied\":false}"
+    Url = f"https://api.cloudflare.com/client/v4/zones/{ZoneId}/dns_records/{DnsRecordId}"
+
+    Req = requests.put(Url , headers = Header , data = Data)
+    print(Req)
+    print(Req.text)
+
 
 
 
 if __name__ == '__main__' :
-    CreateConfig()
-    ScannIp()
-    DnsRecordGet()
-    GetPing()
+#    CreateConfig()
+#    ScannIp()
+#    DnsRecordGet()
+#    GetPing()
+    RecordUpdate()
